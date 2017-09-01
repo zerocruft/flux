@@ -8,7 +8,6 @@ import (
 	"net"
 )
 
-
 // Returns writeChannel, readChannel, error
 func NewClient(req FluxConnectParameters) (FluxClient, error) {
 	var clientConnection net.Conn
@@ -26,7 +25,7 @@ func NewClient(req FluxConnectParameters) (FluxClient, error) {
 	}
 
 	responseBytes, err := bufio.NewReader(clientConnection).ReadBytes('#')
-	fluxServiceResponse, success := BytesToFluxObject(bytes.TrimRight(responseBytes, "#"))
+	fluxServiceResponse, success := bytesToFluxObject(bytes.TrimRight(responseBytes, "#"))
 	if !success {
 		clientConnection.Close()
 		return FluxClient{}, errors.New("Internal Flux Object Error. Invalid msg format")
@@ -34,7 +33,7 @@ func NewClient(req FluxConnectParameters) (FluxClient, error) {
 	//Check to make sure flux object is of connection response type
 	if fluxServiceResponse.GetType() != FLUX_TYPE_CONNECTION_RESPONSE {
 		clientConnection.Close()
-		log.Println(fluxServiceResponse)//TODO do I need to do this?
+		log.Println(fluxServiceResponse) //TODO do I need to do this?
 		return FluxClient{}, errors.New("Flux Service failed to respond")
 	}
 
@@ -76,15 +75,13 @@ func NewClient(req FluxConnectParameters) (FluxClient, error) {
 
 	return FluxClient{
 		clientToken: fluxServiceResponse.GetClientToken(),
-		send: clientWriteChannel,
-		receive: clientReadChannel,
+		send:        clientWriteChannel,
+		receive:     clientReadChannel,
 	}, nil
 }
 
-
-
 type FluxClient struct {
 	clientToken string
-	send    chan FluxMessage
-	receive chan FluxMessage
+	send        chan FluxMessage
+	receive     chan FluxMessage
 }

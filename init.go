@@ -1,14 +1,14 @@
 package main
 
 import (
-	"sync"
 	"flag"
 	"github.com/zerocruft/flux/debug"
+	"sync"
 )
 
 var (
 	flgDebug bool
-	mainWG sync.WaitGroup
+	mainWG   sync.WaitGroup
 )
 
 func init() {
