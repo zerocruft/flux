@@ -8,6 +8,8 @@ import (
 
 var (
 	flgDebug bool
+	flgConfig string
+	flgPort int
 	mainWG   sync.WaitGroup
 )
 
@@ -27,5 +29,7 @@ func initDebug() {
 
 func parseFlags() {
 	flag.BoolVar(&flgDebug, "debug", false, "debug mode")
+	flag.StringVar(&flgConfig, "config", "flux.toml", "location of flux config")
+	flag.IntVar(&flgPort, "port", 8080, "port")
 	flag.Parse()
 }

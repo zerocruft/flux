@@ -121,3 +121,14 @@ func propogateMsg(token string, msg []byte) {
 		}
 	}
 }
+
+func parseFluxMsg(msgBytes []byte) (FluxMsg, bool) {
+	msgSections := bytes.Split(msgBytes, []byte(":"))
+	if len(msgSections) != 4 {
+		return FlxMsg{}, false
+	}
+}
+
+type FluxMsg struct {
+
+}

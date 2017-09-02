@@ -8,6 +8,7 @@ import (
 	"github.com/zerocruft/flux/debug"
 	"github.com/zerocruft/flux/internal"
 	"net/http"
+	"strconv"
 )
 
 var upgrader = websocket.Upgrader{
@@ -20,7 +21,7 @@ func listen() {
 	router := mux.NewRouter()
 	router.HandleFunc("/flux", handleFluxConnection).Methods("GET")
 
-	err := http.ListenAndServe(":8081", router)
+	err := http.ListenAndServe(":"+strconv.Itoa(flgPort), router)
 	if err != nil {
 		fmt.Println(err)
 		return
