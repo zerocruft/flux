@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/zerocruft/flux/capacitor"
 	"github.com/zerocruft/flux/debug"
 	"github.com/zerocruft/flux/internal"
 	"net/http"
 	"strconv"
+	"github.com/zerocruft/capacitor"
 )
 
 var upgrader = websocket.Upgrader{
