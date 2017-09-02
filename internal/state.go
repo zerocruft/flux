@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"github.com/zerocruft/flux/capacitor"
 	"github.com/zerocruft/flux/debug"
 )
 
@@ -93,42 +92,56 @@ func deleteSubFromTopic(topic, sub string) {
 //-----------
 // Msg
 
-func propogateMsg(token string, msg []byte) {
-	msgSections := bytes.Split(msg, []byte(":"))
-	if len(msgSections) == 4 {
-		if string(msgSections[0]) == capacitor.FLUX_TYPE_TOPIC_SUBSCRIPTION {
-			if string(msgSections[1]) != "0" && string(msgSections[2]) != "0" {
-				addSubToTopic(token, string(msgSections[2]))
-			}
-			debug.Log("Topic subscription [" + string(msgSections[2]) + "] from: " + string(msgSections[1]))
-			return
-		}
+func propogateMsg(token string, msgBytes []byte) {
 
-		if string(msgSections[0]) == capacitor.FLUX_TYPE_STANDARD_MESSAGE {
-			if string(msgSections[2]) != "" {
-				subs := getCopyOfSubsForTopic(string(msgSections[2]))
-				for _, s := range subs {
-					debug.Log("Topic Distribute - Topic[" + string(msgSections[2]) + "] - Sub[" + s + "]")
-					go sendMsgToClient(s, msg)
-				}
-			}
-			return
-		}
+	msg, ok := parseFluxMsg(msgBytes)
+	if !ok {
+		debug.Log("err in parsing message from: "+token)
+	}
 
-		if string(msgSections[0]) == capacitor.FLUX_TYPE_SYSTEM_PING {
-			//TODO system ping
-			return
+	switch msg.msgType {
+
+	case FLUX_TOPIC_SUBSCRIBE:
+		if msg.token != "0" && msg.glance != "0" {
+			addSubToTopic(token, msg.glance)
 		}
+		debug.Log("Topic subscription [" + msg.glance + "] from: " + token)
+		return
+
+	case FLUX_MESSAGE_TEXT:
+		if msg.glance != "" {
+			subscribers := getCopyOfSubsForTopic(msg.glance)
+			for _, subscriber := range subscribers {
+				debug.Log("Topic Distribute - Topic[" + msg.glance + "] - Sub[" + subscriber + "]")
+				go sendMsgToClient(subscriber, msgBytes)
+			}
+		}
+		return
+	default:
+		debug.Log("Invalid Flux msg type: " + msg.msgType)
+		return
 	}
 }
 
-func parseFluxMsg(msgBytes []byte) (FluxMsg, bool) {
+func parseFluxMsg(msgBytes []byte) (fluxMsg, bool) {
 	msgSections := bytes.Split(msgBytes, []byte(":"))
 	if len(msgSections) != 4 {
-		return FlxMsg{}, false
+		return fluxMsg{}, false
 	}
+	msgType := string(msgSections[0])
+	msg := fluxMsg{
+		msgType: msgType,
+		token:   string(msgSections[1]),
+		glance:  string(msgSections[2]),
+		payload: msgSections[3],
+	}
+
+	return msg, true
 }
 
-type FluxMsg struct {
-
+type fluxMsg struct {
+	msgType string
+	token   string
+	glance  string
+	payload []byte
 }

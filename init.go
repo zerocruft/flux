@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	flgDebug bool
+	flgDebug  bool
 	flgConfig string
-	flgPort int
-	mainWG   sync.WaitGroup
+	flgPort   int
+	mainWG    sync.WaitGroup
 )
 
 func init() {
