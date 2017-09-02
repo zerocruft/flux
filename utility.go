@@ -12,9 +12,9 @@ var (
 
 func newToken() string {
 	tokenMutex.Lock()
-	nano := strconv.Itoa(time.Now().Nanosecond())
+	nano := strconv.FormatInt(time.Now().UnixNano(), 10)
 	time.Sleep(2 * time.Nanosecond)
 	tokenMutex.Unlock()
-	return nano
+	return nano[9:]
 
 }

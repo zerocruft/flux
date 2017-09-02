@@ -1,15 +1,17 @@
 package capacitor
 
-import "net"
+import (
+	"github.com/gorilla/websocket"
+)
 
 var (
-	connections         map[string]net.Conn
+	connections         map[string]*websocket.Conn
 	clientWriteChannels map[string]chan FluxMessage
 	clientReadChannels  map[string]chan FluxMessage
 )
 
 func init() {
-	connections = map[string]net.Conn{}
+	connections = map[string]*websocket.Conn{}
 	clientWriteChannels = map[string]chan FluxMessage{}
 	clientReadChannels = map[string]chan FluxMessage{}
 }

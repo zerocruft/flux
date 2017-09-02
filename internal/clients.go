@@ -1,64 +1,68 @@
 package internal
 
 import (
-	"bufio"
+	"github.com/gorilla/websocket"
 	"github.com/zerocruft/flux/debug"
-	"net"
 	"time"
 )
 
 type fluxClientConnection struct {
-	token      string
-	connection net.Conn
-	created    time.Time
-	lastPinged time.Time
-	stack      chan []byte
-	kill       bool
+	token        string
+	sendToClient chan []byte
+	kill         bool
 }
 
-func NewClientConnection(token string, conn net.Conn) {
+func NewClientConnection(token string, conn *websocket.Conn) {
 	fcc := &fluxClientConnection{
-		token:      token,
-		connection: conn,
-		created:    time.Now(),
-		lastPinged: time.Now(),
-		stack:      make(chan []byte, 10),
+		token:        token,
+		sendToClient: make(chan []byte, 25),
 	}
 
 	go func() {
 		for {
-			time.Sleep(10 * time.Microsecond)
+			time.Sleep(500 * time.Microsecond)
 			if fcc.kill {
 				break
 			}
 
-			incomingBytes, err := bufio.NewReader(fcc.connection).ReadBytes('#')
+			_, payload, err := conn.ReadMessage()
 			if err != nil {
 				debug.Log("read fail: client [" + fcc.token + "]")
 				debug.Log(err)
+				conn.Close()
 				fcc.kill = true
+				killClient(fcc.token)
 				break
 			}
 
-			propogateMsg(fcc.token, incomingBytes)
+			debug.Log(fcc.token + ": " + string(payload))
+			propogateMsg(fcc.token, payload)
 		}
 	}()
 
 	go func() {
 		for {
+			time.Sleep(500 * time.Microsecond)
 			if fcc.kill {
 				break
 			}
 
-			_, err := fcc.connection.Write(<-fcc.stack)
-			if err != nil {
-				debug.Log("write fail: client[" + fcc.token + "]")
-				debug.Log(err)
-				fcc.kill = true
-				break
+			select {
+			case msgBytes := <-fcc.sendToClient:
+				err := conn.WriteMessage(websocket.TextMessage, msgBytes)
+				if err != nil {
+					debug.Log("write fail: client[" + fcc.token + "]")
+					debug.Log(err)
+					fcc.kill = true
+					conn.Close()
+					killClient(fcc.token)
+					break
+				}
+
+			default:
+				continue
 			}
 		}
-
 	}()
 
 	persistClient(fcc)

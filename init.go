@@ -22,9 +22,7 @@ func initWaitGroup() {
 	mainWG.Add(1)
 }
 func initDebug() {
-	debug.Init(func() bool {
-		return flgDebug
-	})
+	debug.Init(flgDebug)
 }
 
 func parseFlags() {

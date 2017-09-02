@@ -14,8 +14,21 @@ func persistClient(fcc *fluxClientConnection) {
 
 func killClient(token string) {
 	fccMutex.Lock()
+	defer fccMutex.Unlock()
+
 	delete(fccs, token)
+	deleteSubFromAllTopics(token)
+}
+
+func sendMsgToClient(token string, msg []byte) {
+	fccMutex.Lock()
+	client, exists := fccs[token]
+	if !exists {
+		fccMutex.Unlock()
+		return
+	}
 	fccMutex.Unlock()
+	client.sendToClient <- msg
 }
 
 //---------
@@ -35,7 +48,7 @@ func addSubToTopic(sub, topic string) {
 	// Iterate over subscribers making sure to not duplicate subscriber for topic
 	for _, s := range topicSubs {
 		if s == sub {
-			debug.Log("subsriber["+sub+"] already subscribed to topic["+topic+"]")
+			debug.Log("subsriber[" + sub + "] already subscribed to topic[" + topic + "]")
 			return
 		}
 	}
@@ -51,6 +64,11 @@ func getCopyOfSubsForTopic(topic string) []string {
 	return topics[topic]
 }
 
+func deleteSubFromAllTopics(sub string) {
+	for t, _ := range topics {
+		deleteSubFromTopic(t, sub)
+	}
+}
 func deleteSubFromTopic(topic, sub string) {
 	topicsMutex.Lock()
 	defer topicsMutex.Unlock()
@@ -80,9 +98,9 @@ func propogateMsg(token string, msg []byte) {
 	if len(msgSections) == 4 {
 		if string(msgSections[0]) == capacitor.FLUX_TYPE_TOPIC_SUBSCRIPTION {
 			if string(msgSections[1]) != "0" && string(msgSections[2]) != "0" {
-				addSubToTopic(token, string(msgSections[1]))
+				addSubToTopic(token, string(msgSections[2]))
 			}
-			debug.Log("Topic subscription from: " + string(msgSections[1]))
+			debug.Log("Topic subscription [" + string(msgSections[2]) + "] from: " + string(msgSections[1]))
 			return
 		}
 
@@ -90,9 +108,8 @@ func propogateMsg(token string, msg []byte) {
 			if string(msgSections[2]) != "" {
 				subs := getCopyOfSubsForTopic(string(msgSections[2]))
 				for _, s := range subs {
-					fccMutex.Lock()
-					defer fccMutex.Unlock()
-					fccs[s].stack <- msg
+					debug.Log("Topic Distribute - Topic[" + string(msgSections[2]) + "] - Sub[" + s + "]")
+					go sendMsgToClient(s, msg)
 				}
 			}
 			return

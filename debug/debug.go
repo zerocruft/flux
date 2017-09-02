@@ -5,15 +5,15 @@ import (
 )
 
 var (
-	isDebug func() bool
+	isDebug bool
 )
 
-func Init(fn func() bool) {
-	isDebug = fn
+func Init(is bool) {
+	isDebug = is
 }
 
 func Log(msg interface{}) {
-	if isDebug() {
+	if isDebug {
 		fmt.Print("DEBUG: ")
 		fmt.Println(msg)
 	}

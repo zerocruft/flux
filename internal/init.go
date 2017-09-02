@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -23,5 +24,7 @@ func init() {
 func stateTicker() {
 	for {
 		time.Sleep(5 * time.Second)
+		fmt.Println(len(fccs))
+		fmt.Println(topics)
 	}
 }
