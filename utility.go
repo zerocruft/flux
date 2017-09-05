@@ -15,6 +15,6 @@ func newToken() string {
 	nano := strconv.FormatInt(time.Now().UnixNano(), 10)
 	time.Sleep(2 * time.Nanosecond)
 	tokenMutex.Unlock()
-	return nano[9:]
+	return nano
 
 }
