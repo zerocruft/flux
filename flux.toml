@@ -1,0 +1,50 @@
+
+logdir = "/var/logs/flux"
+cluster = "HighScore-Cluster"
+
+[this]
+id = "Node1"
+address = "localhost"
+port = 8283
+enabled = true
+
+[[node]]
+id = "Node2"
+address = "node2.flux.zerocruft.com"
+port = 8283
+enabled = true
+
+[[node]]
+id = "Node3"
+address = "node3.flux.zerocruft.com"
+port = 8283
+enabled = true
+
+[[node]]
+id = "Node4"
+address = "node4.flux.zerocruft.com"
+port = 8283
+enabled = false
+
+[jwt]
+level = "client"
+secret = "ldkj03hd3oidh3oidh3odi3hdoi3hdoih3odih3do3idh3iofhoih3"
+    [[jwt.claim]]
+    key = "flux-reader"
+    value = "true"
+
+    [[jwt.claim]]
+    key = "flux-writer"
+    value = "false"
+
+[jwt]
+level = "node"
+secret = "dlkjsdlksjdlksjdlksdklsjdlksjdlksdkljlksdjlksdjksljd"
+    [[jwt.claim]]
+    key = "role"
+    value = "flux-node"
+
+    [[jwt.claim]]
+    key = "cluster-name"
+    value = "HighScore-Cluster"
+

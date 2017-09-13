@@ -4,6 +4,9 @@ import (
 	"flag"
 	"github.com/zerocruft/flux/debug"
 	"sync"
+	"github.com/BurntSushi/toml"
+	"fmt"
+	"os"
 )
 
 var (
@@ -11,10 +14,12 @@ var (
 	flgConfig string
 	flgPort   int
 	mainWG    sync.WaitGroup
+	config FluxConfig
 )
 
 func init() {
 	parseFlags()
+	loadConfig()
 	initDebug()
 	initWaitGroup()
 }
@@ -32,4 +37,12 @@ func parseFlags() {
 	flag.StringVar(&flgConfig, "config", "flux.toml", "location of flux config")
 	flag.IntVar(&flgPort, "port", 8080, "port")
 	flag.Parse()
+}
+
+func loadConfig() {
+	_, err := toml.DecodeFile(flgConfig, &config)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
