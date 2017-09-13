@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"github.com/zerocruft/flux/debug"
+	"github.com/zerocruft/capacitor"
 )
 
 func persistClient(fcc *fluxClientConnection) {
@@ -96,52 +97,49 @@ func propogateMsg(token string, msgBytes []byte) {
 
 	msg, ok := parseFluxMsg(msgBytes)
 	if !ok {
-		debug.Log("err in parsing message from: "+token)
+		debug.Log("err in parsing message from: " + token)
 	}
 
-	switch msg.msgType {
+	switch msg.Control {
 
-	case FLUX_TOPIC_SUBSCRIBE:
-		if msg.token != "0" && msg.glance != "0" {
-			addSubToTopic(token, msg.glance)
+	case CONTROL_TOPIC_SUBSCRIBE:
+		if msg.Topic != "0" {
+			addSubToTopic(token, msg.Topic)
 		}
-		debug.Log("Topic subscription [" + msg.glance + "] from: " + token)
+		debug.Log("Topic subscription [" + msg.Topic + "] from: " + token)
 		return
 
-	case FLUX_MESSAGE_TEXT:
-		if msg.glance != "" {
-			subscribers := getCopyOfSubsForTopic(msg.glance)
+	case CONTROL_MESSAGE_TEXT:
+		if msg.Topic != "" {
+			subscribers := getCopyOfSubsForTopic(msg.Topic)
 			for _, subscriber := range subscribers {
-				debug.Log("Topic Distribute - Topic[" + msg.glance + "] - Sub[" + subscriber + "]")
+				debug.Log("Topic Distribute - Topic[" + msg.Topic + "] - Sub[" + subscriber + "]")
 				go sendMsgToClient(subscriber, msgBytes)
 			}
 		}
 		return
+	case CONTROL_NODE_COMM:
+		if msg.Topic != "" {
+			msg.Control = CONTROL_MESSAGE_TEXT
+			propogateMsg("NODE_TALK", capacitor.FluxMessageToBytes(msg))
+		}
 	default:
-		debug.Log("Invalid Flux msg type: " + msg.msgType)
+		debug.Log("Invalid Flux msg type: " + msg.Control)
 		return
 	}
 }
 
-func parseFluxMsg(msgBytes []byte) (fluxMsg, bool) {
-	msgSections := bytes.Split(msgBytes, []byte(":"))
-	if len(msgSections) != 4 {
-		return fluxMsg{}, false
+func parseFluxMsg(msgBytes []byte) (capacitor.FluxMessage, bool) {
+	msgSections := bytes.Split(msgBytes, []byte("::"))
+	if len(msgSections) != 3 {
+		return capacitor.FluxMessage{}, false
 	}
 	msgType := string(msgSections[0])
-	msg := fluxMsg{
-		msgType: msgType,
-		token:   string(msgSections[1]),
-		glance:  string(msgSections[2]),
-		payload: msgSections[3],
+	msg := capacitor.FluxMessage{
+		Control: msgType,
+		Topic:   string(msgSections[1]),
+		Payload: msgSections[2],
 	}
 
 	return msg, true
-}
-
-type fluxMsg struct {
-	msgType string
-	token   string
-	glance  string
-	payload []byte
 }

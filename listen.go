@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/zerocruft/capacitor"
 	"github.com/zerocruft/flux/debug"
 	"github.com/zerocruft/flux/internal"
 	"net/http"
 	"strconv"
-	"github.com/zerocruft/capacitor"
 )
 
 var upgrader = websocket.Upgrader{
@@ -38,7 +38,7 @@ func handleFluxConnection(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	token := newToken()
+	token := newToken() //TODO this needs to be even more unique if part of flux cluster
 	responseMsg := capacitor.FluxConnectionResponseToBytes(token)
 
 	// Send the client their token. Signifying an accepted connection
