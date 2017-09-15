@@ -1,0 +1,35 @@
+
+
+Flux started out as a reinventing the wheel message queue service. While building it, and engineering it to the needs
+of a multiplayer game I was working on, I realized that I didn't want any queues at all. If the messages were to wait
+in a queue, than it was moving too slow. I needed the messages to find no home on the service, and to be pushed out
+to listeners of their respective topics as soon as they came in. Today, Flux is being written as an event switch.
+
+
+What is Flux?
+
+1. A message broker, without a queue. Clients subscribing to a topic, get the message when its sent. Flux keeps no record
+of it. Flux doesn't read the payload either, its in and out.
+2. If a message is posted to flux, and there are no subscribers to the topic, it just dies. Nobody will ever read it.
+3. Flux is scalable. For now... regardless of the ideas I have, I will start with requiring a flux balancer in front to
+direct traffic. In the future, I want to find a way for flux to self manage its cluster, without a leader role
+4. Built in JWT authentication, if the JWT says you can connect, Flux will give you a connection
+
+
+
+Flux Balancer: Flux-Balancer is a load balancer service that knows how to talk to the flux cluster. The nodes of the cluster
+report to the balancer, and the balancer sends traffic to the nodes based on the nodes' load. This way, flux doesn't have to
+know anything about its cluster when instantiating.. other than where to find the flux balancer. The flux balancer will also
+carry the responsibility of informing each of the nodes of their cluster peers, so that all messages that come in are properly
+distributed among all cluster peers. The balancer could also be the only device which knows the url of each peer if I wanted
+to abstract that. This way, cluster nodes would only get traffic sent to it.
+
+When a node is onboarding, it generates a token. It will pass this token to the balancer so that the balancer has access
+to the nodes private control api. The balancer can then ask for status updates, client counts, and etc from each cluster node.
+
+
+
+
+
+
+

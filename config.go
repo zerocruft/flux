@@ -1,18 +1,11 @@
 package main
 
 type FluxConfig struct {
-	This FluxNode `toml:"this"`
-	Cluster []FluxNode `toml:"node"`
-	Authentication JwtAuth `toml:"jwt"`
-	LogDir string `toml:"logs"`
-}
-
-
-type FluxNode struct {
-	Id string `toml:"id"`
-	Address string `toml:"address"`
-	Port int `toml:"port"`
-	Enabled bool `toml:"enabled"`
+	Iam string `toml:"iam"`
+	Ip string `toml:"ip"`
+	Logdir string `toml:"logdir"`
+	Balancer FluxCluster`toml:"cluster"`
+	Jwts []JwtAuth `toml:"jwt"`
 }
 
 type JwtAuth struct {
@@ -23,4 +16,11 @@ type JwtAuth struct {
 type JwtClaim struct {
 	Key string `toml:"key"`
 	Value string `toml:"value"`
+}
+
+type FluxCluster struct {
+	Name string `toml:"name"`
+	BalancerAddress string `toml:"address"`
+	BalancerPort int `toml:"port"`
+	Scramble bool `toml:"scramble"`
 }

@@ -19,7 +19,9 @@ var upgrader = websocket.Upgrader{
 func listen() {
 
 	router := mux.NewRouter()
+	router.HandleFunc("/test", handleTest).Methods("GET")
 	router.HandleFunc("/flux", handleFluxConnection).Methods("GET")
+	router.HandleFunc("/control/cluster", handleControlCluster).Methods("POST")
 
 	err := http.ListenAndServe(":"+strconv.Itoa(flgPort), router)
 	if err != nil {
@@ -52,4 +54,12 @@ func handleFluxConnection(resp http.ResponseWriter, req *http.Request) {
 
 	go internal.NewClientConnection(token, conn)
 
+}
+
+func handleControlCluster(response http.ResponseWriter, request *http.Request) {
+
+}
+
+func handleTest(response http.ResponseWriter, request *http.Request) {
+	response.Write([]byte("HELLO DANG WORLD!!! BOOOM"))
 }
