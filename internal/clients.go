@@ -2,6 +2,7 @@ package internal
 
 import (
 	"github.com/gorilla/websocket"
+	"github.com/zerocruft/flux/cluster"
 	"github.com/zerocruft/flux/debug"
 	"time"
 )
@@ -25,7 +26,7 @@ func NewClientConnection(token string, conn *websocket.Conn) {
 				break
 			}
 
-			_, payload, err := conn.ReadMessage()
+			_, msgBytes, err := conn.ReadMessage()
 			if err != nil {
 				debug.Log("read fail: client [" + fcc.token + "]")
 				debug.Log(err)
@@ -35,8 +36,9 @@ func NewClientConnection(token string, conn *websocket.Conn) {
 				break
 			}
 
-			debug.Log(fcc.token + ": " + string(payload))
-			propogateMsg(fcc.token, payload)
+			debug.Log(fcc.token + ": " + string(msgBytes))
+			go cluster.PropagateToPeers(msgBytes)
+			PropogateMsg(fcc.token, msgBytes)
 		}
 	}()
 

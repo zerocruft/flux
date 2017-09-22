@@ -2,9 +2,13 @@ package internal
 
 import (
 	"bytes"
-	"github.com/zerocruft/flux/debug"
 	"github.com/zerocruft/capacitor"
+	"github.com/zerocruft/flux/debug"
 )
+
+func NumberOfConnections() int {
+	return len(fccs)
+}
 
 func persistClient(fcc *fluxClientConnection) {
 	fccMutex.Lock()
@@ -93,7 +97,7 @@ func deleteSubFromTopic(topic, sub string) {
 //-----------
 // Msg
 
-func propogateMsg(token string, msgBytes []byte) {
+func PropogateMsg(token string, msgBytes []byte) {
 
 	msg, ok := parseFluxMsg(msgBytes)
 	if !ok {
@@ -110,22 +114,24 @@ func propogateMsg(token string, msgBytes []byte) {
 		return
 
 	case CONTROL_MESSAGE_TEXT:
-		if msg.Topic != "" {
-			subscribers := getCopyOfSubsForTopic(msg.Topic)
-			for _, subscriber := range subscribers {
-				debug.Log("Topic Distribute - Topic[" + msg.Topic + "] - Sub[" + subscriber + "]")
-				go sendMsgToClient(subscriber, msgBytes)
-			}
-		}
+		distributeMsgToSubscribers(msg, msgBytes)
 		return
-	case CONTROL_NODE_COMM:
-		if msg.Topic != "" {
-			msg.Control = CONTROL_MESSAGE_TEXT
-			propogateMsg("NODE_TALK", capacitor.FluxMessageToBytes(msg))
-		}
+	case CONTROL_PEER_CHAT:
+		distributeMsgToSubscribers(msg, msgBytes)
+		return
 	default:
 		debug.Log("Invalid Flux msg type: " + msg.Control)
 		return
+	}
+}
+
+func distributeMsgToSubscribers(msg capacitor.FluxMessage, msgBytes []byte) {
+	if msg.Topic != "0" {
+		subscribers := getCopyOfSubsForTopic(msg.Topic)
+		for _, subscriber := range subscribers {
+			debug.Log("Topic Distribute - Topic[" + msg.Topic + "] - Sub[" + subscriber + "]")
+			go sendMsgToClient(subscriber, msgBytes)
+		}
 	}
 }
 

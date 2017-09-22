@@ -7,6 +7,7 @@ import (
 	"github.com/zerocruft/capacitor"
 	"github.com/zerocruft/flux/debug"
 	"github.com/zerocruft/flux/internal"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -19,11 +20,10 @@ var upgrader = websocket.Upgrader{
 func listen() {
 
 	router := mux.NewRouter()
-	router.HandleFunc("/test", handleTest).Methods("GET")
 	router.HandleFunc("/flux", handleFluxConnection).Methods("GET")
-	router.HandleFunc("/control/cluster", handleControlCluster).Methods("POST")
+	router.HandleFunc("/control/peer-chat", handlePeerChat).Methods("POST")
 
-	err := http.ListenAndServe(":"+strconv.Itoa(flgPort), router)
+	err := http.ListenAndServe(":"+strconv.Itoa(config.Port), router)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -56,10 +56,18 @@ func handleFluxConnection(resp http.ResponseWriter, req *http.Request) {
 
 }
 
-func handleControlCluster(response http.ResponseWriter, request *http.Request) {
+func handlePeerChat(response http.ResponseWriter, request *http.Request) {
+	//TODO validate payload make sure its a valid FluxMsg
+	//TODO valudate auth in header (perhaps a generated token that only the balancer knows)
 
-}
+	defer request.Body.Close()
+	msgBytes, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		debug.Log(err)
+		response.WriteHeader(http.StatusNotAcceptable)
+		return
+	}
 
-func handleTest(response http.ResponseWriter, request *http.Request) {
-	response.Write([]byte("HELLO DANG WORLD!!! BOOOM"))
+	internal.PropogateMsg("NODE_TALK", msgBytes)
+	return
 }

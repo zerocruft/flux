@@ -1,12 +1,14 @@
 
 iam = "mud-engine-1"
-ip = "10.225.83.50"
+url = "10.225.83.50"
+port = 8283
 logdir = "/var/logs/flux"
 
 
 [cluster]
 name = "flux1-cluster"
-address = "flux1.zerocruft.com"
+address = "localhost"
+port = 8281
 scramble = true
 
 [jwt]

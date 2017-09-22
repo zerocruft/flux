@@ -2,19 +2,18 @@ package main
 
 import (
 	"flag"
-	"github.com/zerocruft/flux/debug"
-	"sync"
-	"github.com/BurntSushi/toml"
 	"fmt"
+	"github.com/BurntSushi/toml"
+	"github.com/zerocruft/flux/debug"
 	"os"
+	"sync"
 )
 
 var (
 	flgDebug  bool
 	flgConfig string
-	flgPort   int
 	mainWG    sync.WaitGroup
-	config FluxConfig
+	config    FluxConfig
 )
 
 func init() {
@@ -35,7 +34,6 @@ func initDebug() {
 func parseFlags() {
 	flag.BoolVar(&flgDebug, "debug", false, "debug mode")
 	flag.StringVar(&flgConfig, "config", "flux.toml", "location of flux config")
-	flag.IntVar(&flgPort, "port", 8080, "port")
 	flag.Parse()
 }
 
