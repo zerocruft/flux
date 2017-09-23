@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/zerocruft/capacitor"
 	"github.com/zerocruft/flux/debug"
 	"github.com/zerocruft/flux/internal"
-	"io/ioutil"
-	"net/http"
-	"strconv"
 )
 
 var upgrader = websocket.Upgrader{

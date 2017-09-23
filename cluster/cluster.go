@@ -2,20 +2,26 @@ package cluster
 
 import (
 	"bytes"
-	"fluxmq/debug"
-	"github.com/zerocruft/capacitor"
 	"net/http"
 	"sync"
+
+	"github.com/zerocruft/capacitor"
+	"github.com/zerocruft/flux/debug"
 )
 
 var (
 	clusterPeers []capacitor.FluxNode
 	mutex        sync.Mutex
+	iam          string
 )
 
 func init() {
 	clusterPeers = []capacitor.FluxNode{}
 	mutex = sync.Mutex{}
+}
+
+func RegisterSelf(name string) {
+	iam = name
 }
 
 func SetPeers(ps []capacitor.FluxNode) {
@@ -36,20 +42,28 @@ func copyOfPeers() (peers []capacitor.FluxNode) {
 
 func PropagateToPeers(msgBytes []byte) {
 	for _, peer := range copyOfPeers() {
-		go postMsgToPeer(peer, msgBytes)
+		if peer.Name != iam {
+			postMsgToPeer(peer, msgBytes)
+		}
 	}
 }
 
 func postMsgToPeer(node capacitor.FluxNode, msgBytes []byte) {
-	resp, err := http.Post(node.Address, "application/json", bytes.NewReader(msgBytes))
+	c := http.DefaultClient
+	r, err := http.NewRequest(http.MethodPost, "http://"+node.PeerEndpoint, bytes.NewReader(msgBytes))
+	r.Close = true
+	resp, err := c.Do(r)
+	debug.Log(r)
 	if err != nil {
+		debug.Log("DEBUG: postMsgToPeer")
+		debug.Log(node.ClientEndpoint)
 		debug.Log(err)
 		return
 	}
 
 	if resp.StatusCode != 200 {
 		debug.Log("Attempting to send msg to peer: status code not 200")
-		debug.Log(node.Address)
+		debug.Log(node.ClientEndpoint)
 	}
 	return
 }

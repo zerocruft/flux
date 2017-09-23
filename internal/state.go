@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+
 	"github.com/zerocruft/capacitor"
 	"github.com/zerocruft/flux/debug"
 )
@@ -104,10 +105,11 @@ func PropogateMsg(token string, msgBytes []byte) {
 		debug.Log("err in parsing message from: " + token)
 	}
 
+	debug.Log(msg)
 	switch msg.Control {
 
 	case CONTROL_TOPIC_SUBSCRIBE:
-		if msg.Topic != "0" {
+		if msg.Topic != "0" && token != "NODE_TALK" {
 			addSubToTopic(token, msg.Topic)
 		}
 		debug.Log("Topic subscription [" + msg.Topic + "] from: " + token)

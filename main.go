@@ -3,15 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fluxmq/debug"
 	"fmt"
-	"github.com/zerocruft/capacitor"
-	"github.com/zerocruft/flux/cluster"
-	"github.com/zerocruft/flux/internal"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/zerocruft/capacitor"
+	"github.com/zerocruft/flux/cluster"
+	"github.com/zerocruft/flux/debug"
+	"github.com/zerocruft/flux/internal"
 )
 
 func main() {
@@ -26,11 +27,14 @@ func clusterTracker() {
 
 	for {
 		time.Sleep(10 * time.Second)
+		cluster.RegisterSelf(config.Iam)
 		if config.Balancer.BalancerAddress != "" {
 
 			ping := capacitor.FluxPing{
 				Node: capacitor.FluxNode{
-					Address: config.Url + ":" + strconv.Itoa(config.Port) + "/flux",
+					ClientEndpoint: config.Url + ":" + strconv.Itoa(config.Port) + "/flux",
+					Name:           config.Iam,
+					PeerEndpoint:   config.Url + ":" + strconv.Itoa(config.Port) + "/control/peer-chat",
 				},
 				NumberOfConnections: internal.NumberOfConnections(),
 			}
@@ -40,8 +44,8 @@ func clusterTracker() {
 				debug.Log(err)
 				return
 			}
-			balancerUrl := "http://" + config.Balancer.BalancerAddress + ":" + strconv.Itoa(config.Balancer.BalancerPort) + "/control/cluster/ping"
-			resp, err := http.Post(balancerUrl, "application/json", bytes.NewReader(pingBytes))
+			balancerURL := "http://" + config.Balancer.BalancerAddress + ":" + strconv.Itoa(config.Balancer.BalancerPort) + "/control/cluster/ping"
+			resp, err := http.Post(balancerURL, "application/json", bytes.NewReader(pingBytes))
 			if err != nil {
 				debug.Log("cluster tracker: pong response failed")
 				debug.Log(err)
@@ -61,6 +65,7 @@ func clusterTracker() {
 			if err != nil {
 				debug.Log(err)
 			}
+			debug.Log(pong)
 			cluster.SetPeers(pong.Peers)
 		}
 	}
